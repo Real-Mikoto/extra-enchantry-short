@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:gold_ingot",
+    "minecraft:gold_ingot",
+    "extra-enchantry-short:wind_feather"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:gold_ring",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "wind_feather"
+    }
+  }
+}

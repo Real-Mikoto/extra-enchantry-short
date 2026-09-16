@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:gold_ingot",
+    "minecraft:string",
+    "minecraft:string",
+    "extra-enchantry-short:storm_stone"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:gold_necklace",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "storm_stone"
+    }
+  }
+}

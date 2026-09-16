@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:diamond",
+    "minecraft:diamond",
+    "extra-enchantry-short:wind_feather"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:diamond_ring",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "wind_feather"
+    }
+  }
+}

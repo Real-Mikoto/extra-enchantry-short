@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "realmikoto.extraenchantryshort.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "HudMixin",
+    "LocalPlayerMixin",
+    "SlotMixin",
+    "InventoryScreenMixin",
+    "CreativeModeInventoryScreenMixin",
+    "AbstractContainerScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

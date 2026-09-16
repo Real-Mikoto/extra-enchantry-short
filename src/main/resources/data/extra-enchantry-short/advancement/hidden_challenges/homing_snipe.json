@@ -1,0 +1,27 @@
+{
+  "parent": "extra-enchantry-short:hidden_challenges/root",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": true,
+    "frame": "challenge",
+    "show_toast": true,
+    "icon": {
+      "id": "minecraft:arrow"
+    },
+    "title": {
+      "translate": "advancement.extra-enchantry-short.hidden_challenges.homing_snipe.title"
+    },
+    "description": {
+      "translate": "advancement.extra-enchantry-short.hidden_challenges.homing_snipe.description"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:gold_ingot",
+    "minecraft:gold_ingot",
+    "minecraft:string",
+    "extra-enchantry-short:soul_amber"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:gold_earring",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "soul_amber"
+    }
+  }
+}

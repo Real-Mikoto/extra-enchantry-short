@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:copper_ingot",
+    "minecraft:copper_ingot",
+    "minecraft:string",
+    "extra-enchantry-short:tide_pearl"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:copper_bracelet",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "tide_pearl"
+    }
+  }
+}

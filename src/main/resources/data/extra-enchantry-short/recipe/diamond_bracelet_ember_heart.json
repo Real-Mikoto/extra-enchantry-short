@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:diamond",
+    "minecraft:diamond",
+    "minecraft:string",
+    "extra-enchantry-short:ember_heart"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:diamond_bracelet",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "ember_heart"
+    }
+  }
+}

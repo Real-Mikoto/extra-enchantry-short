@@ -1,0 +1,27 @@
+{
+  "parent": "extra-enchantry-short:usage/root",
+  "criteria": {
+    "triggered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "description": {
+      "translate": "advancement.extra-enchantry-short.usage.fireworks.description"
+    },
+    "frame": "task",
+    "icon": {
+      "id": "minecraft:firework_rocket"
+    },
+    "show_toast": true,
+    "title": {
+      "translate": "advancement.extra-enchantry-short.usage.fireworks.title"
+    }
+  },
+  "requirements": [
+    [
+      "triggered"
+    ]
+  ]
+}

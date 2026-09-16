@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "extra-enchantry-short",
+  "version": "${version}",
+  "name": "Extra Enchantry Short",
+  "description": "40 附魔 + 配饰与宝石体系：独立重写的 Fabric 附魔扩展（Extra Enchantry Short）",
+  "authors": [
+    "RealMikoto"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/extra-enchantry-Short",
+    "sources": "https://github.com/Real-Mikoto/extra-enchantry-short"
+  },
+  "license": "AGPL-3.0-or-later",
+  "icon": "assets/extra-enchantry-short/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "realmikoto.extraenchantryshort.ExtraEnchantryShort"
+    ],
+    "client": [
+      "realmikoto.extraenchantryshort.client.ExtraEnchantryShortClient"
+    ]
+  },
+  "mixins": [
+    "extra-enchantry-short.mixins.json",
+    {
+      "config": "extra-enchantry-short.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

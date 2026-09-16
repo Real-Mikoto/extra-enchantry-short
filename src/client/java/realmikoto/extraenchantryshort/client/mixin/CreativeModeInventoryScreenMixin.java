@@ -1,0 +1,121 @@
+package realmikoto.extraenchantryshort.client.mixin;
+
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import realmikoto.extraenchantryshort.client.AccessoryColumnRenderer;
+import realmikoto.extraenchantryshort.client.AccessoryHudState;
+import realmikoto.extraenchantryshort.client.SlotReposition;
+
+/**
+ * 创造背包集成（玩家页签）：
+ * <ul>
+ *   <li>盾牌栏（副手）下移与胸甲平齐：(35,20) → (35,33)；展开时随按钮让位滑到面板左缘外 (-3,33)；</li>
+ *   <li>配饰按钮放在头盔栏左侧、与头盔平齐、同尺寸：(35,6)；展开时滑到 (-3,6)；</li>
+ *   <li>展开后配饰 2×2 出现在装备栏左侧（(16,6)/(35,6)/(16,33)/(35,33)）。</li>
+ * </ul>
+ * 原版 selectTab 会把 ItemPickerMenu 的槽位列表整体替换为 InventoryMenu 槽位的
+ * SlotWrapper 包装（点击按 containerId 0 路由到服务端 InventoryMenu）。
+ *
+ * <p><strong>重定位必须原地改坐标</strong>（{@link SlotReposition}）：创造界面
+ * slotClicked 将点击槽硬转为 SlotWrapper——替换列表条目会
+ * ClassCastException（每次点击必炸，配饰与背包格全部无法交互）。</p>
+ *
+ * <p>渲染要点：副手原版槽框烤入 tab_inventory.png 的 (35,20)——副手移位后
+ * 该框成为残影，以面板色衬底覆盖（右侧止于护甲框 x=53 之前）。</p>
+ */
+@Mixin(CreativeModeInventoryScreen.class)
+public abstract class CreativeModeInventoryScreenMixin extends AbstractContainerScreen<AbstractContainerMenu> {
+
+	/**
+	 * 配饰 2×2 槽位坐标（性能：extractBackground 每帧调用，
+	 * 坐标恒定故提升为常量，并与重定位共用。两处均只读遍历，不写入，共享安全）。
+	 */
+	private static final int[] EXTRAENCHANTRYSHORT$ACC_X = {16, 35, 16, 35};
+	private static final int[] EXTRAENCHANTRYSHORT$ACC_Y = {6, 6, 33, 33};
+
+	protected CreativeModeInventoryScreenMixin(AbstractContainerMenu menu,
+			net.minecraft.world.entity.player.Inventory inventory, net.minecraft.network.chat.Component title) {
+		super(menu, inventory, title);   // mixin 构造器不参与合并
+	}
+
+	@Inject(method = "selectTab", at = @At("TAIL"))
+	private void extraenchantryshort$fixupPlayerTab(net.minecraft.world.item.CreativeModeTab tab, CallbackInfo ci) {
+		CreativeModeInventoryScreen screen = (CreativeModeInventoryScreen) (Object) this;
+		if (!screen.isInventoryOpen()) {
+			return;
+		}
+		extraenchantryshort$repositionAccessories();
+	}
+
+	@Inject(method = "extractBackground", at = @At("TAIL"))
+	private void extraenchantryshort$drawAccessoryPanel(GuiGraphicsExtractor extractor, int mouseX, int mouseY,
+			float partialTick, CallbackInfo ci) {
+		CreativeModeInventoryScreen screen = (CreativeModeInventoryScreen) (Object) this;
+		if (!screen.isInventoryOpen()) {
+			return;
+		}
+		AccessoryColumnRenderer.tickAnimation(partialTick);
+		// 按钮/副手共用滑出 X：折叠 35 → 展开 -3
+		int slideX = Math.round(35 - 38.0F * AccessoryHudState.eased());
+		// 1) 固定条衬底（x33~52，面板色）：常驻覆盖烤入 tab_inventory.png 的旧副手框
+		//    （35,20）——展开后项链 (35,6) 与手镯 (35,33) 的槽框盖不到其中段
+		//    （y23~31），残影恰落在两格之间；此条独立于滑列，始终遮盖
+		AccessoryColumnRenderer.drawBacking(extractor, this.leftPos, this.topPos, 33, 3, 20, 50);
+		// 2) 滑出列衬底（按钮 + 副手列随列滑动；折叠时与固定条重合，跳过）
+		if (slideX - 2 < 33) {
+			AccessoryColumnRenderer.drawBacking(extractor, this.leftPos, this.topPos, slideX - 2, 3, 20, 50);
+		}
+		// 3) 副手槽框（当前位：折叠 (35,33) / 展开随列滑出）
+		AccessoryColumnRenderer.drawSlotBg(extractor, this.leftPos, this.topPos, slideX, 33);
+		// 4) 配饰 2×2（装备栏左侧，与装备 2×2 同风格同尺寸；绘制晚于衬底，槽框压在其上）
+		AccessoryColumnRenderer.drawColumn(extractor, this.leftPos, this.topPos, this.getMenu(),
+				EXTRAENCHANTRYSHORT$ACC_X,
+				EXTRAENCHANTRYSHORT$ACC_Y,
+				0, 0, 0, 0);
+		// 5) 配饰按钮（头盔左侧头盔行）
+		AccessoryColumnRenderer.drawButton(extractor, this.leftPos, this.topPos, slideX, 6);
+	}
+
+	@Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+	private void extraenchantryshort$accessoryButtonClick(MouseButtonEvent event, boolean inside,
+			CallbackInfoReturnable<Boolean> cir) {
+		CreativeModeInventoryScreen screen = (CreativeModeInventoryScreen) (Object) this;
+		if (!screen.isInventoryOpen() || event.button() != 0) {
+			return;
+		}
+		int slideX = Math.round(35 - 38.0F * AccessoryHudState.eased());
+		if (AccessoryColumnRenderer.buttonHit(this.leftPos, this.topPos, event.x(), event.y(), slideX, 6)) {
+			AccessoryColumnRenderer.toggle();
+			extraenchantryshort$repositionAccessories();   // 副手列立即让位/复位
+			cir.setReturnValue(true);
+		}
+	}
+
+	/**
+	 * 原地重定位玩家页签槽位（不替换列表条目——见类 javadoc 的 CCE 踩坑）：
+	 * 副手（下标 45）下移与胸甲平齐（展开时让位至面板左缘外）；
+	 * 配饰槽（下标 46~49，原版包装顺序保证）就位到装备左侧 2×2。
+	 * 折叠时配饰槽 isActive=false 不渲染不可交互——位置仅为展开就位。
+	 */
+	private void extraenchantryshort$repositionAccessories() {
+		AbstractContainerMenu menu = this.getMenu();
+		if (menu.slots.size() < 50) {
+			return;   // 玩家页签 = 50 包装槽 + 1 销毁槽；其他页签不动
+		}
+		int offhandX = AccessoryHudState.expanded() ? -3 : 35;
+		((SlotReposition) (Object) menu.slots.get(45)).extraenchantryshort$reposition(offhandX, 33);
+
+		for (int i = 0; i < EXTRAENCHANTRYSHORT$ACC_X.length; i++) {
+			((SlotReposition) (Object) menu.slots.get(46 + i))
+					.extraenchantryshort$reposition(EXTRAENCHANTRYSHORT$ACC_X[i], EXTRAENCHANTRYSHORT$ACC_Y[i]);
+		}
+	}
+}

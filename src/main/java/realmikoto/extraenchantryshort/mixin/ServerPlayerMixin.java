@@ -1,0 +1,81 @@
+package realmikoto.extraenchantryshort.mixin;
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.gamerules.GameRules;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import realmikoto.extraenchantryshort.accessory.AccessoryManager;
+import realmikoto.extraenchantryshort.combat.OathboundManager;
+import realmikoto.extraenchantryshort.fx.FxHelper;
+
+/**
+ * 誓约（Oathbound）的重生搬运（26.2 死亡重生链路，反编译确认）：
+ *
+ * <p>{@code ServerPlayer#restoreFrom(oldPlayer, keepEverything)} 只在
+ * keepEverything 为真（非死亡重生）、keepInventory 开启、或旧玩家为旁观者时
+ * 才调用 {@code transferInventoryXpAndScore}（背包 + 经验 + 分数整体搬运）。
+ * 死亡重生（keepEverything=false）且 keepInventory 关闭时什么都不搬。</p>
+ *
+ * <p>誓约物品已由 PlayerMixin 在 dropEquipment 中提取并放回旧玩家背包，
+ * 这里按覆盖情况补上搬运：
+ * 四件护甲全带誓约 → transferInventoryXpAndScore 全量搬运（经验掉落实体
+ * 已在 LivingEntityMixin#extraenchantryshort$skipOathboundXpDrop 中按条件跳过，
+ * 不会出现"掉经验球 + 保留经验"的重复）；部分誓约 → 仅 replaceWith 搬运背包，
+ * 经验照常掉落。</p>
+ */
+@Mixin(ServerPlayer.class)
+public abstract class ServerPlayerMixin {
+
+	/**
+	 * private 方法 @Shadow 需要方法体（仅签名有意义，运行时被替换为目标实现）。
+	 * 该方法声明于目标类 ServerPlayer 自身，@Shadow 可以解析
+	 * （踩坑记录：@Shadow 只解析不到父类继承的成员）。
+	 */
+	@Shadow
+	private void transferInventoryXpAndScore(Player player) {
+		throw new AssertionError("Shadowed method body was not transformed");
+	}
+
+	@Inject(method = "restoreFrom", at = @At("TAIL"))
+	private void extraenchantryshort$oathboundCarryOver(ServerPlayer oldPlayer, boolean keepEverything,
+			CallbackInfo ci) {
+		if (keepEverything || oldPlayer.isSpectator()) {
+			return;
+		}
+		if (oldPlayer.level().getGameRules().get(GameRules.KEEP_INVENTORY)) {
+			return;
+		}
+		if (!OathboundManager.hasAnyOathboundItem(oldPlayer)) {
+			return;
+		}
+		if (OathboundManager.hasFullOathboundArmor(oldPlayer)) {
+			this.transferInventoryXpAndScore(oldPlayer);
+		} else {
+			((Player) (Object) this).getInventory().replaceWith(oldPlayer.getInventory());
+		}
+		// 誓约重生仪式（P2）：图腾粒子 + 清越编钟（四件套全量，部分誓约减半）
+		ServerPlayer self = (ServerPlayer) (Object) this;
+		if (self.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+			boolean fullSet = OathboundManager.hasFullOathboundArmor(oldPlayer);
+			FxHelper.burst(serverLevel, self,
+					net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING, fullSet ? 10 : 5, 0.4D);
+			FxHelper.play(serverLevel, self,
+					net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME, 0.5F, 1.0F);
+		}
+	}
+
+	/**
+	 * 配饰栏重生搬运：暂存的誓约配饰回插；keepEverything / 旁观者 /
+	 * keepInventory 时整体跟随（Attachment 非 copyOnDeath，须显式搬运）。
+	 */
+	@Inject(method = "restoreFrom", at = @At("TAIL"))
+	private void extraenchantryshort$accessoryCarryOver(ServerPlayer oldPlayer, boolean keepEverything,
+			CallbackInfo ci) {
+		AccessoryManager.onRestoreFrom(oldPlayer, (ServerPlayer) (Object) this, keepEverything);
+	}
+}

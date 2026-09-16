@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:iron_ingot",
+    "minecraft:iron_ingot",
+    "extra-enchantry-short:blade_shard"
+  ],
+  "result": {
+    "id": "extra-enchantry-short:iron_ring",
+    "components": {
+      "extra-enchantry-short:socketed_gem": "blade_shard"
+    }
+  }
+}
