@@ -39,23 +39,14 @@ public abstract class HudMixin {
 	}
 
 	/**
-	 * 客户端活力加成与服务端一致——从服务端同步的 MAX_HEALTH 属性反推加成：
-	 * bonus = ceil(syncedMax) - ceil(本地计算的基础+加成前值)。
-	 * 服务端瞬态修改器经属性同步到达客户端，本地 getAttributeValue 已含真实加成；
-	 * getVitalityBonus 本地值只包含附魔基础部分，差值即为漏掉的同步加成。
-	 */
-	@Unique
-	private static int extraenchantryshort$syncedVitalityBonus(Player player) {
-		int local = ModEnchantments.getVitalityBonus(player);
-		float syncedMax = (float) player.getAttributeValue(Attributes.MAX_HEALTH);
-		float baseMax = syncedMax - local;
-		int extra = Mth.ceil(syncedMax) - Mth.ceil(baseMax);
-		return Math.max(local, Math.max(0, local + extra));
-	}
-
-	/**
 	 * 计算心形行数时从 MAX_HEALTH 中扣除活力加成，
 	 * 使血条保持原版单行（10 颗心），额外生命由下方 TAIL 注入单独显示。
+	 *
+	 * <p>加成取值采用完整版 v1.0.0 的直接本地计算：本模无共鸣等服务端专属加成，
+	 * tick 结算双端执行，客户端本地扫描护甲所得加成与服务端写入值严格一致。
+	 * （完整版 v1.7.4 曾改为从同步 MAX_HEALTH 反推的公式，但该公式在无服务端专属
+	 * 加成的场景下恒返回 2×真实加成——血条行数被多扣一次、×n/N 分母翻倍，
+	 * 即"血条显示错误"的根源，故不沿用。）</p>
 	 */
 	@Redirect(
 			method = "extractPlayerHealth",
@@ -67,7 +58,7 @@ public abstract class HudMixin {
 	private double extraenchantryshort$hideVitalityFromHeartBar(Player player, Holder<Attribute> attribute) {
 		double value = player.getAttributeValue(attribute);
 		if (Attributes.MAX_HEALTH.equals(attribute)) {
-			value -= extraenchantryshort$syncedVitalityBonus(player);
+			value -= ModEnchantments.getVitalityBonus(player);
 		}
 		return value;
 	}
@@ -87,7 +78,7 @@ public abstract class HudMixin {
 	)
 	private float extraenchantryshort$clampHealthForHeartBar(Player player) {
 		float health = player.getHealth();
-		float baseMax = player.getMaxHealth() - extraenchantryshort$syncedVitalityBonus(player);
+		float baseMax = player.getMaxHealth() - ModEnchantments.getVitalityBonus(player);
 		return Math.min(health, baseMax);
 	}
 
@@ -115,7 +106,7 @@ public abstract class HudMixin {
 		if (player == null) {
 			return;
 		}
-		int bonus = extraenchantryshort$syncedVitalityBonus(player);
+		int bonus = ModEnchantments.getVitalityBonus(player);
 		if (bonus <= 0 || extraenchantryshort$armorIconY == Integer.MIN_VALUE) {
 			return;
 		}
