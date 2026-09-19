@@ -68,6 +68,7 @@ public final class ModCreativeTabs {
 			new EnchantmentEntry(ModEnchantments.PLUME_RING, 2),
 			new EnchantmentEntry(ModEnchantments.EMBER_BRACELET, 2),
 			new EnchantmentEntry(ModEnchantments.TIDE_BRACELET, 2),
+			new EnchantmentEntry(ModEnchantments.REACH_BRACELET, 2),
 			new EnchantmentEntry(ModEnchantments.SHARP_FANG, 3),
 			new EnchantmentEntry(ModEnchantments.VIGIL, 2),
 			new EnchantmentEntry(ModEnchantments.RENEWAL, 2)

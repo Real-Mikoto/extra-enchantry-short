@@ -19,7 +19,7 @@ import java.util.Optional;
 /**
  * 附魔注册键与查询规则中心。
  *
- * <p>全部 40 个附魔均为数据驱动定义（{@code data/extra-enchantry-short/enchantment/*.json}），
+ * <p>全部 41 个附魔均为数据驱动定义（{@code data/extra-enchantry-short/enchantment/*.json}），
  * 代码侧只持有 {@link ResourceKey} 常量供逻辑层查询；本类同时承载各附魔的等级查询、
  * 数值规则表与共享判定（火焰家族、boss 豁免等），是 Mixin 与管理器之间的公共查询层。</p>
  */
@@ -139,6 +139,9 @@ public final class ModEnchantments {
 
 	/** 潮镯（游泳效率加成） */
 	public static final ResourceKey<Enchantment> TIDE_BRACELET = key("tide_bracelet");
+
+	/** 远镯（手镯触及距离加成，可与触及叠加） */
+	public static final ResourceKey<Enchantment> REACH_BRACELET = key("reach_bracelet");
 
 	// ============ 环佩与獠牙：狼铠附魔 ×3（铁砧上书，不计玩家共鸣） ============
 
@@ -350,6 +353,11 @@ public final class ModEnchantments {
 	/** 触及等级 */
 	public static int getReachLevel(ItemStack stack) {
 		return level(stack, REACH);
+	}
+
+	/** 远镯等级 */
+	public static int getReachBraceletLevel(ItemStack stack) {
+		return level(stack, REACH_BRACELET);
 	}
 
 	/** 炽焰行者等级 */

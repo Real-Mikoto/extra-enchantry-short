@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 配饰结算中心：8 配饰附魔 + 8 宝石被动的统一结算。
+ * 配饰结算中心：9 配饰附魔（含远镯）+ 8 宝石被动的统一结算。
  *
  * <p>挂点分布：属性类走本类 tick（值变化才写瞬态修改器，活力同模式）；
  * 受伤 / 造成伤害由 {@code LivingEntityMixin} hurtServer 侧调用本类静态入口；
@@ -50,6 +50,7 @@ public final class AccessoryManager {
 	private static final double PLUME_RING_REDUCTION = 0.06D;         // 羽环：弹射物伤害 -6%/级
 	private static final double EMBER_BRACELET_REDUCTION = 0.10D;     // 烬镯：火伤害 -10%/级
 	private static final double TIDE_BRACELET_SWIM = 0.08D;           // 潮镯：游泳效率 +8%/级
+	private static final double REACH_BRACELET_RANGE = 0.5D;          // 远镯：触及距离 +0.5 格/级（实体 / 方块交互）
 	private static final int SOUL_CHIME_FOOD = 2;                     // 魂铃：饥饿 +2/级（饱和 = level 点）
 
 	// ============ 宝石被动基数（× 材质传导率） ============
@@ -112,12 +113,14 @@ public final class AccessoryManager {
 		double attackSpeed = 0.0D;
 		double swimEfficiency = 0.0D;
 		double stormSpeed = 0.0D;
+		double reachRange = 0.0D;
 		for (ItemStack stack : slots) {
 			if (stack.isEmpty()) {
 				continue;
 			}
 			attackSpeed += ModEnchantments.level(stack, ModEnchantments.BLADE_RING) * BLADE_RING_SPEED;
 			swimEfficiency += ModEnchantments.level(stack, ModEnchantments.TIDE_BRACELET) * TIDE_BRACELET_SWIM;
+			reachRange += ModEnchantments.level(stack, ModEnchantments.REACH_BRACELET) * REACH_BRACELET_RANGE;
 			String gem = Accessories.socketedGem(stack);
 			double conductivity = Accessories.conductivityOf(stack);
 			if (gem != null && conductivity > 0.0D) {
@@ -140,6 +143,12 @@ public final class AccessoryManager {
 				swimEfficiency, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 		writeModifier(player, Attributes.MOVEMENT_SPEED, "accessory_storm_speed",
 				stormSpeed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+		// 远镯：ADD_VALUE 直加交互距离；修改器 id 独立于武器「触及」的数据驱动效果
+		// （enchantment.reach/*），同属性不同 id 天然叠加
+		writeModifier(player, Attributes.ENTITY_INTERACTION_RANGE, "accessory_reach_entity",
+				reachRange, AttributeModifier.Operation.ADD_VALUE);
+		writeModifier(player, Attributes.BLOCK_INTERACTION_RANGE, "accessory_reach_block",
+				reachRange, AttributeModifier.Operation.ADD_VALUE);
 
 		// ---- 自然恢复加速（翠滴 + 萌芽晶）：自有计时器，替代注入原版回血分支 ----
 		tickRegenBoost(player, slots);

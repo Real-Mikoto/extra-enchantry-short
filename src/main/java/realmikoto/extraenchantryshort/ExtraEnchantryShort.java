@@ -199,7 +199,7 @@ public class ExtraEnchantryShort implements ModInitializer {
 		// 归羽（Homing Plume）：落空箭矢的延迟返还节拍（1 秒飞回动画窗口）
 		ServerTickEvents.END_SERVER_TICK.register(HomingPlumeManager::tick);
 
-		LOGGER.info("Extra Enchantry Short initialized: {} enchantments + accessory & gem system", 40);
+		LOGGER.info("Extra Enchantry Short initialized: {} enchantments + accessory & gem system", 41);
 	}
 
 	/** 构造本模命名空间下的资源 ID */
